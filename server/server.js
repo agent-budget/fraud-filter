@@ -26,6 +26,22 @@ import { syncHotlist } from "./hotlist-sync.js";
 const PORT = parseInt(process.env.AGENT_TRUST_PORT || "18921", 10);
 const HOST = "127.0.0.1";
 
+// Proxy detection — track if we've seen a request with forwarding headers,
+// which would indicate the dashboard is being proxied to a public network.
+let proxyDetected = false;
+
+function checkForProxy(req) {
+  if (proxyDetected) return;
+  if (req.headers["x-forwarded-for"] || req.headers["x-real-ip"]) {
+    proxyDetected = true;
+    console.warn(
+      "[agent-trust] WARNING: Proxy headers detected on incoming request. " +
+      "The dashboard may be exposed beyond localhost. " +
+      "Ensure nginx or any reverse proxy is NOT forwarding external traffic to this port."
+    );
+  }
+}
+
 const DASHBOARD_PATH = resolve(
   new URL("./index.html", import.meta.url).pathname
 );
@@ -73,6 +89,8 @@ function notFound(res) {
 // --- Server ---
 
 const server = createServer(async (req, res) => {
+  checkForProxy(req);
+
   // CORS preflight
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
@@ -170,6 +188,9 @@ const server = createServer(async (req, res) => {
           participation: {
             network_enabled: config.participate_in_network,
             auto_positive: config.auto_positive_signals,
+          },
+          security: {
+            proxy_detected: proxyDetected,
           },
         });
         return;

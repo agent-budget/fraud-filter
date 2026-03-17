@@ -29,6 +29,7 @@ export function buildSignal(report, configPath) {
     amount_range: bucketPrice(report.amount_usd),
     timestamp_bucket: today,
     reporter_hash: reporterHash,
+    skill_name: report.skill_name || null,
   };
 }
 
@@ -63,6 +64,7 @@ export function queueReport(report, pendingPath = DEFAULT_PENDING_PATH, configPa
     queued_at: new Date().toISOString(),
     status: "pending",
     endpoint_hint: extractHint(report.endpoint_url),
+    skill_name: report.skill_name || null,
   };
 
   appendFileSync(pendingPath, JSON.stringify(entry) + "\n", { mode: 0o600 });
@@ -119,16 +121,19 @@ export async function submitPendingReports(pendingPath = DEFAULT_PENDING_PATH, c
 
   for (const report of pendingReports) {
     try {
+      const body = {
+        endpoint_hash:   report.endpoint_hash,
+        outcome:         report.outcome,
+        amount_range:    report.amount_range,
+        timestamp_bucket: report.timestamp_bucket,
+        reporter_hash:   report.reporter_hash,
+      };
+      if (report.skill_name) body.skill_name = report.skill_name;
+
       const response = await fetch(config.report_endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          endpoint_hash: report.endpoint_hash,
-          outcome: report.outcome,
-          amount_range: report.amount_range,
-          timestamp_bucket: report.timestamp_bucket,
-          reporter_hash: report.reporter_hash,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {

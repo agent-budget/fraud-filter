@@ -33,6 +33,9 @@ Queue an anonymous report about an endpoint. Use only when the owner explicitly 
 # Report a post-payment failure (paid but got bad data)
 report.sh https://shady-data.xyz/api/v2 post_payment_failure 0.50
 
+# Report with skill attribution — include which skill routed to this endpoint
+report.sh https://shady-data.xyz/api/v2 post_payment_failure 0.50 --skill stock-research
+
 # Report a pre-payment failure (failed before payment completed)
 report.sh https://broken.example.com/api pre_payment_failure 0.10
 
