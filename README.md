@@ -55,7 +55,7 @@ In `~/.openclaw/openclaw.json` or via the dashboard Settings tab:
     "agent-trust": {
       "enabled": true,
       "config": {
-        "trust_db_url": "https://api.agent-trust.net/trust.json",
+        "trust_db_url":    "https://api.agent-trust.net/trust.json",
         "report_endpoint": "https://api.agent-trust.net/reports",
         "sync_interval_hours": 24,
         "participate_in_network": false,

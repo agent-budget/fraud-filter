@@ -10,6 +10,18 @@ Like agent-budget, agent-trust uses only Node.js built-in modules. No npm packag
 
 The dashboard server binds to `127.0.0.1`, never `0.0.0.0`. Security through network isolation — only local processes can access the API.
 
+### Unknown endpoints return `allow`, not `caution`
+
+An endpoint with no data in the trust DB gets `recommendation: "allow"`. The payment ecosystem is new; most endpoints will be unknown for a long time. Treating unknown as `caution` would make the skill actively hostile to agent spending and would get it removed. Absence of reports is not evidence of bad behavior — it just means nobody has reported yet.
+
+The hotlist (see below) handles the real-time threat: a brand-new scam endpoint will appear there within hours of the first wave of failure reports, before it ever accumulates enough history for a trust score.
+
+### Hotlist for fast blocking
+
+The nightly trust.json rebuild is too slow to catch exit scams or endpoint compromises that happen intra-day. A separate `hotlist.json` is computed dynamically from the last 24 hours of signals: any endpoint with ≥ 3 unique reporters flagging it as failed gets added. Skills fetch this hourly and check it before the trust DB lookup. A hotlist match returns `recommendation: "block"` immediately, regardless of any stored trust score.
+
+The hotlist is intentionally aggressive — it's a tripwire for sudden surges, not a nuanced score. False positives are possible (a flaky endpoint during an outage), but a temporary block is less harmful than an undetected scam.
+
 ### Nightly sync, not real-time
 
 Trust scores update daily, not per-transaction. This is intentional:
@@ -84,7 +96,29 @@ Full formula documented in `references/signal-format.md`.
 | 70-100 | `allow` |
 | 40-69 | `caution` |
 | 0-39 | `block` |
-| unknown | `caution` (with `unknown_endpoint` warning) |
+| hotlisted | `block` (overrides score) |
+| unknown | `allow` (no data is not a risk signal) |
+
+## Price Anomaly Types
+
+`checkPriceAnomaly` returns an `anomaly_type` field to distinguish between two cases that require different responses:
+
+| `anomaly_type` | Meaning | Recommended action |
+|---|---|---|
+| `suspicious` | Price is high *and* endpoint has score < 60 | Warn user; do not auto-proceed |
+| `market_outlier` | Price is high but endpoint is otherwise trusted | Inform user; proceed normally |
+
+This prevents blocking a surge-priced but legitimate service (e.g. a high-token-count LLM response) while still flagging anomalous prices on already-questionable endpoints.
+
+## Known Limitations
+
+### ETLD+1 normalization (subdomain bypass)
+
+URL normalization currently hashes the full path after stripping query params and fragments. A bad actor could register multiple subdomains (`api-v1.bad.com`, `api-v2.bad.com`) to avoid a trust score tied to a specific URL. Correct defense requires ETLD+1 (registrable domain) normalization using a Public Suffix List, which would introduce an external dependency contrary to the zero-dependency design. This is tracked as a future improvement; for now the hotlist provides a faster mitigation path since all subdomains of a compromised provider will generate failure reports quickly.
+
+### Sybil attack resistance (planned for future version)
+
+Anonymous reporting is vulnerable to coordinated false reports against a legitimate service. The current defense is rate limiting (100 signals per reporter hash per day) and requiring 3 unique reporters before hotlisting. A stronger defense — planned for a future version — is to require reports to reference a transaction hash from the reporter's agent-budget log, providing proof of actual payment. This ties reports to real economic activity and makes Sybil attacks expensive rather than just inconvenient.
 
 ## API Endpoints
 

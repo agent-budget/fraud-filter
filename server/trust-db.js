@@ -2,6 +2,21 @@ import { createHash, randomBytes } from "node:crypto";
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
+const DEFAULT_HOTLIST_PATH = resolve(
+  process.env.AGENT_TRUST_HOTLIST ||
+    new URL("../data/hotlist.json", import.meta.url).pathname
+);
+
+function loadHotlistCache(hotlistPath = DEFAULT_HOTLIST_PATH) {
+  if (!existsSync(hotlistPath)) return new Set();
+  try {
+    const data = JSON.parse(readFileSync(hotlistPath, "utf-8"));
+    return new Set(data.blocked || []);
+  } catch {
+    return new Set();
+  }
+}
+
 const DEFAULT_DB_PATH = resolve(
   process.env.AGENT_TRUST_DB ||
     new URL("../data/trust.json", import.meta.url).pathname
@@ -94,16 +109,33 @@ export function lookupEndpoint(url, dbPath = DEFAULT_DB_PATH) {
  */
 export function checkEndpoint(url, dbPath = DEFAULT_DB_PATH) {
   const hash = hashEndpoint(url);
+
+  // Hotlist check first — recent surge of failure reports overrides stored score
+  const hotlist = loadHotlistCache();
+  if (hotlist.has(hash)) {
+    return {
+      endpoint: url,
+      endpoint_hash: hash,
+      known: true,
+      warnings: ["hotlisted"],
+      recommendation: "block",
+      hotlisted: true,
+    };
+  }
+
   const entry = lookupEndpoint(url, dbPath);
 
   if (!entry) {
+    // Unknown endpoints get an all-clear — absence of data is not a signal.
+    // Blocking unknown endpoints would make the skill unusable as the agent
+    // payment ecosystem grows.
     return {
       endpoint: url,
       endpoint_hash: hash,
       known: false,
       report_count: 0,
-      warnings: ["unknown_endpoint"],
-      recommendation: "caution",
+      warnings: [],
+      recommendation: "allow",
     };
   }
 
@@ -149,9 +181,15 @@ export function checkPriceAnomaly(url, priceUsd, dbPath = DEFAULT_DB_PATH) {
   const p90 = entry.price_p90_usd;
 
   if (price > p90 * 2) {
+    // High price AND a low trust score suggests a scam; high price on a
+    // trusted endpoint is more likely surge pricing or a large request.
+    const anomalyType = (entry.score != null && entry.score < 60) ? "suspicious" : "market_outlier";
     return {
       anomalous: true,
-      reason: `Price $${price.toFixed(4)} is more than 2x the p90 ($${p90.toFixed(4)}) for this endpoint`,
+      anomaly_type: anomalyType,
+      reason: anomalyType === "suspicious"
+        ? `Price $${price.toFixed(4)} is more than 2x the p90 ($${p90.toFixed(4)}) on a low-trust endpoint`
+        : `Price $${price.toFixed(4)} is more than 2x the p90 ($${p90.toFixed(4)}) — likely surge pricing or large request`,
       price,
       median,
       p90,
@@ -159,9 +197,13 @@ export function checkPriceAnomaly(url, priceUsd, dbPath = DEFAULT_DB_PATH) {
   }
 
   if (price > median * 3) {
+    const anomalyType = (entry.score != null && entry.score < 60) ? "suspicious" : "market_outlier";
     return {
       anomalous: true,
-      reason: `Price $${price.toFixed(4)} is more than 3x the median ($${median.toFixed(4)}) for this endpoint`,
+      anomaly_type: anomalyType,
+      reason: anomalyType === "suspicious"
+        ? `Price $${price.toFixed(4)} is more than 3x the median ($${median.toFixed(4)}) on a low-trust endpoint`
+        : `Price $${price.toFixed(4)} is more than 3x the median ($${median.toFixed(4)}) — likely surge pricing or large request`,
       price,
       median,
       p90,
@@ -294,8 +336,8 @@ export function getDbStatus(dbPath = DEFAULT_DB_PATH) {
 // --- Configuration ---
 
 const DEFAULT_CONFIG = {
-  trust_db_url: "https://cdn.spendlog.ai/trust.json",
-  report_endpoint: "https://api.spendlog.ai/reports",
+  trust_db_url: "https://api.agent-trust.net/trust.json",
+  report_endpoint: "https://api.agent-trust.net/reports",
   sync_interval_hours: 24,
   participate_in_network: false,
   auto_positive_signals: false,

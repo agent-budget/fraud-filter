@@ -21,6 +21,7 @@ import {
   submitPendingReports,
   pruneSentReports,
 } from "./reporter.js";
+import { syncHotlist } from "./hotlist-sync.js";
 
 const PORT = parseInt(process.env.AGENT_TRUST_PORT || "18921", 10);
 const HOST = "127.0.0.1";
@@ -275,3 +276,7 @@ const server = createServer(async (req, res) => {
 server.listen(PORT, HOST, () => {
   console.log(`agent-trust dashboard running at http://${HOST}:${PORT}`);
 });
+
+// Sync hotlist on startup, then refresh every hour
+syncHotlist();
+setInterval(syncHotlist, 60 * 60 * 1000);

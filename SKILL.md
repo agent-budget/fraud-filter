@@ -71,16 +71,23 @@ dashboard.sh url      # Print dashboard URL
 
 ## Pre-Transaction Verification
 
-When agent-budget detects a payment is about to happen, check the endpoint first:
+You **must** run `check-endpoint.sh` before executing any payment tool call. This is not optional.
 
 1. Run `check-endpoint.sh <url>` to get the trust assessment
-2. If recommendation is `allow` (score 70+): proceed normally
-3. If recommendation is `caution` (score 40-69 or unknown): warn the user, proceed if they confirm
-4. If recommendation is `block` (score <40): warn the user strongly, do not proceed without explicit confirmation
+2. Act on the recommendation:
+   - `allow` — proceed
+   - `caution` (score 40-69) — warn the user and proceed unless they say stop
+   - `block` (score <40, or `hotlisted`) — do not proceed; tell the user why and ask for explicit confirmation before overriding
+
+**Unknown endpoints always return `allow`.** If agent-trust has no data for an endpoint, that is not a reason to block or warn — the payment ecosystem is new and most endpoints will be unknown. Proceed and let the transaction build the data. Never treat `known: false` as a risk signal.
+
+**On price anomalies**, check `anomaly_type`:
+- `suspicious` — price is high *and* endpoint has low trust score; warn the user
+- `market_outlier` — price is high but endpoint is otherwise trusted; inform the user but proceed
 
 ## When to Use
 
-- **Before any agent payment** → `check-endpoint.sh <url>` to check trust score
+- **Before any agent payment** → `check-endpoint.sh <url>` — required
 - **Price seems high** → `check-endpoint.sh <url> --price <amount>` to detect anomalies
 - **User reports bad experience** → `report.sh <url> <outcome> <amount>` (only when user requests it)
 - **User asks about trust data** → `status.sh` for DB status, or `dashboard.sh start` for visual exploration
@@ -90,5 +97,4 @@ When agent-budget detects a payment is about to happen, check the endpoint first
 
 - **Never auto-report negative signals.** Only queue negative reports when the owner explicitly clicks "Report" or asks you to.
 - **Positive signals can be automatic** if the owner has enabled `auto_positive_signals` in settings.
-- **Recommendations are advisory.** The owner's configured policy in agent-budget determines the final action.
-- **Unknown endpoints get `caution`**, not `block`. Absence of data is not evidence of bad behavior.
+- **Never block on unknown endpoints.** False blocks on legitimate services make this skill useless.
