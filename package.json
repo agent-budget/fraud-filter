@@ -1,0 +1,12 @@
+{
+  "name": "agent-trust",
+  "version": "0.1.0",
+  "description": "OpenClaw skill that provides community trust scores for agent payment endpoints",
+  "type": "module",
+  "scripts": {
+    "start": "node server/server.js",
+    "test": "node --test test/test.js"
+  },
+  "keywords": ["openclaw", "skill", "x402", "trust", "reputation", "payments"],
+  "license": "MIT"
+}
