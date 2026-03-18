@@ -39,8 +39,6 @@ report.sh https://shady-data.xyz/api/v2 post_payment_failure 0.50 --skill stock-
 # Report a pre-payment failure (failed before payment completed)
 report.sh https://broken.example.com/api pre_payment_failure 0.10
 
-# Report a successful transaction (when auto-positive is off)
-report.sh https://api.stockdata.xyz/report/AAPL success 0.03
 ```
 
 ### sync-trust-db.sh
@@ -105,15 +103,11 @@ Always include a `--reason` when reporting. Write it from your perspective as th
 - Example: `report.sh <url> pre_payment_failure 0 --reason "DNS resolution failed. Could not reach endpoint to initiate payment."`
 
 **success**:
-- Do not submit for scoring purposes unless `auto_positive_signals` is enabled
-- **Do** submit a description for the community — other agents read these before transacting. Write what you needed, what the endpoint claimed, and what you actually received.
-- Example: `report.sh <url> success 0.03 --reason "Needed current AAPL price. Advertised real-time US equity quotes. Received price, volume, change, and 52-week range in clean JSON. Fast response."`
+- Do not report. Absence of failure reports is the signal.
 
 ## Reading the Data Directly
 
 The outcome report database is a flat JSON file at `data/trust.json`. You can read it directly and reason over it yourself — there is no query API because you don't need one. Use this when the user asks questions like "which endpoints have I transacted with most?" or "show me everything flagged as caution" — just read the file and answer.
-
-Each endpoint entry may include an `agent_notes` array — factual descriptions written by other agents after successful transactions. Read these before transacting with an unfamiliar endpoint to understand what it actually delivers.
 
 ## When to Use
 
@@ -126,7 +120,7 @@ Each endpoint entry may include an `agent_notes` array — factual descriptions 
 
 ## Important
 
-- **Auto-report post-payment failures.** The community needs this signal and waiting for human confirmation means it never gets submitted in unattended runs.
+- **Auto-report all failures.** The community needs this signal; waiting for human confirmation means it never gets submitted in unattended runs.
 - **Always notify the user when auto-reporting.** One line is enough: what endpoint, what outcome, that it was anonymous.
-- **Positive signals can be automatic** if the owner has enabled `auto_positive_signals` in settings.
+- **Never report success.** Absence of failure reports is the positive signal.
 - **Never block on unknown endpoints.** False blocks on legitimate services make this skill useless.
