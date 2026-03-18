@@ -1,7 +1,7 @@
 /**
  * Hotlist sync.
  *
- * Fetches api.agent-trust.net/hotlist.json hourly and caches it to
+ * Fetches api.fraud-filter.net/hotlist.json hourly and caches it to
  * data/hotlist.json. The hotlist contains endpoint hashes that have received
  * a surge of failure reports in the last 24 hours — providing faster blocking
  * than waiting for the nightly trust.json rebuild.
@@ -13,11 +13,11 @@ import { writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 
 const HOTLIST_URL =
-  process.env.AGENT_TRUST_HOTLIST_URL ||
-  "https://api.agent-trust.net/hotlist.json";
+  process.env.FRAUD_FILTER_HOTLIST_URL ||
+  "https://api.fraud-filter.net/hotlist.json";
 
 const HOTLIST_CACHE_PATH = resolve(
-  process.env.AGENT_TRUST_HOTLIST ||
+  process.env.FRAUD_FILTER_HOTLIST ||
     new URL("../data/hotlist.json", import.meta.url).pathname
 );
 
@@ -28,7 +28,7 @@ const HOTLIST_CACHE_PATH = resolve(
 export async function syncHotlist() {
   try {
     const res = await fetch(HOTLIST_URL, {
-      headers: { "User-Agent": "agent-trust-skill/1.0" },
+      headers: { "User-Agent": "fraud-filter-skill/1.0" },
       signal: AbortSignal.timeout(5_000),
     });
     if (!res.ok) {

@@ -234,7 +234,7 @@ describe("trust-db: lookup and check", () => {
   let dbPath;
 
   before(() => {
-    tmpDir = mkdtempSync(join(tmpdir(), "agent-trust-test-"));
+    tmpDir = mkdtempSync(join(tmpdir(), "fraud-filter-test-"));
     dbPath = join(tmpDir, "trust.json");
 
     // Create a test DB with real hashes
@@ -360,7 +360,7 @@ describe("trust-db: config", () => {
   let configPath;
 
   before(() => {
-    tmpDir = mkdtempSync(join(tmpdir(), "agent-trust-config-test-"));
+    tmpDir = mkdtempSync(join(tmpdir(), "fraud-filter-config-test-"));
     configPath = join(tmpDir, "config.json");
   });
 
@@ -405,7 +405,7 @@ describe("trust-db: DB status", () => {
   });
 
   it("reports existing DB stats", () => {
-    const tmpDir = mkdtempSync(join(tmpdir(), "agent-trust-status-test-"));
+    const tmpDir = mkdtempSync(join(tmpdir(), "fraud-filter-status-test-"));
     const dbPath = join(tmpDir, "trust.json");
     writeFileSync(dbPath, JSON.stringify(SAMPLE_DB));
 
@@ -424,7 +424,7 @@ describe("reporter: signal construction", () => {
   let configPath;
 
   before(() => {
-    tmpDir = mkdtempSync(join(tmpdir(), "agent-trust-reporter-test-"));
+    tmpDir = mkdtempSync(join(tmpdir(), "fraud-filter-reporter-test-"));
     configPath = join(tmpDir, "config.json");
   });
 
@@ -459,7 +459,7 @@ describe("reporter: queue and pending", () => {
   let configPath;
 
   before(() => {
-    tmpDir = mkdtempSync(join(tmpdir(), "agent-trust-queue-test-"));
+    tmpDir = mkdtempSync(join(tmpdir(), "fraud-filter-queue-test-"));
     pendingPath = join(tmpDir, "pending.jsonl");
     configPath = join(tmpDir, "config.json");
   });
@@ -535,7 +535,7 @@ describe("reporter: pruning", () => {
   let pendingPath;
 
   before(() => {
-    tmpDir = mkdtempSync(join(tmpdir(), "agent-trust-prune-test-"));
+    tmpDir = mkdtempSync(join(tmpdir(), "fraud-filter-prune-test-"));
     pendingPath = join(tmpDir, "pending.jsonl");
 
     // Write some test reports
@@ -571,7 +571,7 @@ describe("server API", () => {
   const port = 18922; // Different port for tests
 
   before(async () => {
-    tmpDir = mkdtempSync(join(tmpdir(), "agent-trust-server-test-"));
+    tmpDir = mkdtempSync(join(tmpdir(), "fraud-filter-server-test-"));
 
     // Create a test trust DB with real hashes
     const goodHash = hashEndpoint(TEST_URLS.good);
@@ -606,10 +606,10 @@ describe("server API", () => {
       cwd: join(import.meta.url.replace("file://", ""), "../../"),
       env: {
         ...process.env,
-        AGENT_TRUST_PORT: String(port),
-        AGENT_TRUST_DB: join(tmpDir, "trust.json"),
-        AGENT_TRUST_PENDING: join(tmpDir, "pending.jsonl"),
-        AGENT_TRUST_CONFIG: join(tmpDir, "config.json"),
+        FRAUD_FILTER_PORT: String(port),
+        FRAUD_FILTER_DB: join(tmpDir, "trust.json"),
+        FRAUD_FILTER_PENDING: join(tmpDir, "pending.jsonl"),
+        FRAUD_FILTER_CONFIG: join(tmpDir, "config.json"),
       },
     });
     await new Promise((r) => setTimeout(r, 500));

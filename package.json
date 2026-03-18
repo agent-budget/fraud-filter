@@ -1,5 +1,5 @@
 {
-  "name": "agent-trust",
+  "name": "fraud-filter",
   "version": "0.1.0",
   "description": "OpenClaw skill that provides community trust scores for agent payment endpoints",
   "type": "module",

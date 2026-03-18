@@ -1,10 +1,10 @@
-# agent-trust — Technical Architecture
+# fraud-filter — Technical Architecture
 
 ## Design Decisions
 
 ### Zero dependencies
 
-Like agent-budget, agent-trust uses only Node.js built-in modules. No npm packages. This eliminates supply chain risk and keeps the skill self-contained.
+Like agent-budget, fraud-filter uses only Node.js built-in modules. No npm packages. This eliminates supply chain risk and keeps the skill self-contained.
 
 ### Localhost-only binding
 
@@ -122,7 +122,7 @@ Anonymous reporting is vulnerable to coordinated false reports against a legitim
 
 ## API Endpoints
 
-All served on `127.0.0.1:18921` (configurable via `AGENT_TRUST_PORT`).
+All served on `127.0.0.1:18921` (configurable via `FRAUD_FILTER_PORT`).
 
 ### Read endpoints
 
@@ -148,7 +148,7 @@ All served on `127.0.0.1:18921` (configurable via `AGENT_TRUST_PORT`).
 
 ## Security & Privacy
 
-### What agent-trust NEVER sends
+### What fraud-filter NEVER sends
 
 - Individual transaction details (exact amounts, timestamps, services, sessions)
 - Wallet addresses or balances
@@ -156,12 +156,12 @@ All served on `127.0.0.1:18921` (configurable via `AGENT_TRUST_PORT`).
 - Agent-budget's transaction log
 - Full endpoint URLs (only SHA-256 hashes)
 
-### What agent-trust sends (only with opt-in)
+### What fraud-filter sends (only with opt-in)
 
 - Anonymous outcome signals (success/failure + bucketed price range + day)
 - Manual reports (human-confirmed, same anonymous format)
 
-### What agent-trust downloads
+### What fraud-filter downloads
 
 - `trust.json` from CDN (public, same file for everyone)
 - No cookies, no tracking, no user-specific content
@@ -195,11 +195,11 @@ All tests use temporary directories and clean up after themselves.
 
 ## Server-Side Components
 
-Hosted at `api.agent-trust.net` ([github.com/mattpolly/agent-trust.net](https://github.com/mattpolly/agent-trust.net)):
+Hosted at `api.fraud-filter.net` ([github.com/mattpolly/fraud-filter.net](https://github.com/mattpolly/fraud-filter.net)):
 
 ### Reporting endpoint
 
-`POST https://api.agent-trust.net/reports` — Accepts anonymous signals. Validates format, checks rate limits (100 signals per `reporter_hash` per day), inserts into SQLite via `INSERT OR IGNORE` (deduplicates on reporter + endpoint + day).
+`POST https://api.fraud-filter.net/reports` — Accepts anonymous signals. Validates format, checks rate limits (100 signals per `reporter_hash` per day), inserts into SQLite via `INSERT OR IGNORE` (deduplicates on reporter + endpoint + day).
 
 ### Aggregation pipeline
 
@@ -210,4 +210,4 @@ Hosted at `api.agent-trust.net` ([github.com/mattpolly/agent-trust.net](https://
 
 ### Trust database delivery
 
-`GET https://api.agent-trust.net/trust.json` — served directly by nginx with `Cache-Control: public, max-age=3600`. Clients sync daily by default.
+`GET https://api.fraud-filter.net/trust.json` — served directly by nginx with `Cache-Control: public, max-age=3600`. Clients sync daily by default.

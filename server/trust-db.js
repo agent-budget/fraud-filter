@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from "no
 import { dirname, resolve } from "node:path";
 
 const DEFAULT_HOTLIST_PATH = resolve(
-  process.env.AGENT_TRUST_HOTLIST ||
+  process.env.FRAUD_FILTER_HOTLIST ||
     new URL("../data/hotlist.json", import.meta.url).pathname
 );
 
@@ -18,12 +18,12 @@ function loadHotlistCache(hotlistPath = DEFAULT_HOTLIST_PATH) {
 }
 
 const DEFAULT_DB_PATH = resolve(
-  process.env.AGENT_TRUST_DB ||
+  process.env.FRAUD_FILTER_DB ||
     new URL("../data/trust.json", import.meta.url).pathname
 );
 
 const DEFAULT_CONFIG_PATH = resolve(
-  process.env.AGENT_TRUST_CONFIG ||
+  process.env.FRAUD_FILTER_CONFIG ||
     new URL("../data/config.json", import.meta.url).pathname
 );
 
@@ -336,8 +336,8 @@ export function getDbStatus(dbPath = DEFAULT_DB_PATH) {
 // --- Configuration ---
 
 const DEFAULT_CONFIG = {
-  trust_db_url: "https://api.agent-trust.net/trust.json",
-  report_endpoint: "https://api.agent-trust.net/reports",
+  trust_db_url: "https://api.fraud-filter.net/trust.json",
+  report_endpoint: "https://api.fraud-filter.net/reports",
   sync_interval_hours: 24,
   participate_in_network: false,
   auto_positive_signals: false,
@@ -345,7 +345,7 @@ const DEFAULT_CONFIG = {
 };
 
 /**
- * Load agent-trust configuration, merging with defaults.
+ * Load fraud-filter configuration, merging with defaults.
  */
 export function loadConfig(configPath = DEFAULT_CONFIG_PATH) {
   let stored = {};

@@ -3,7 +3,7 @@ import { dirname, resolve } from "node:path";
 import { hashEndpoint, extractHint, bucketPrice, getReporterHash, loadConfig } from "./trust-db.js";
 
 const DEFAULT_PENDING_PATH = resolve(
-  process.env.AGENT_TRUST_PENDING ||
+  process.env.FRAUD_FILTER_PENDING ||
     new URL("../data/pending-reports.jsonl", import.meta.url).pathname
 );
 

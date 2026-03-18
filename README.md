@@ -1,4 +1,4 @@
-# agent-trust
+# fraud-filter
 
 Community trust network for agent payment endpoints. Downloads nightly trust scores, provides pre-transaction verification, and accepts anonymous outcome reports.
 
@@ -16,13 +16,13 @@ See [TECHNICAL.md](TECHNICAL.md) for the full security model, data model, and sc
 ## Install
 
 ```bash
-clawhub install agent-trust
+clawhub install fraud-filter
 ```
 
 Or manually:
 
 ```bash
-git clone https://github.com/agent-budget/agent-trust.git ~/.openclaw/skills/agent-trust
+git clone https://github.com/agent-budget/fraud-filter.git ~/.openclaw/skills/fraud-filter
 ```
 
 ## Use
@@ -36,13 +36,13 @@ Or use the CLI directly:
 
 ```bash
 # Check an endpoint before paying
-~/.openclaw/skills/agent-trust/scripts/check-endpoint.sh https://api.example.com/data
+~/.openclaw/skills/fraud-filter/scripts/check-endpoint.sh https://api.example.com/data
 
 # Start visual dashboard at http://127.0.0.1:18921
-~/.openclaw/skills/agent-trust/scripts/dashboard.sh start
+~/.openclaw/skills/fraud-filter/scripts/dashboard.sh start
 
 # Force-refresh trust database
-~/.openclaw/skills/agent-trust/scripts/sync-trust-db.sh --force
+~/.openclaw/skills/fraud-filter/scripts/sync-trust-db.sh --force
 ```
 
 ## Configuration
@@ -52,11 +52,11 @@ In `~/.openclaw/openclaw.json` or via the dashboard Settings tab:
 ```json
 {
   "skills": {
-    "agent-trust": {
+    "fraud-filter": {
       "enabled": true,
       "config": {
-        "trust_db_url":    "https://api.agent-trust.net/trust.json",
-        "report_endpoint": "https://api.agent-trust.net/reports",
+        "trust_db_url":    "https://api.fraud-filter.net/trust.json",
+        "report_endpoint": "https://api.fraud-filter.net/reports",
         "sync_interval_hours": 24,
         "participate_in_network": false,
         "auto_positive_signals": false
@@ -75,7 +75,7 @@ In `~/.openclaw/openclaw.json` or via the dashboard Settings tab:
 ## Project Structure
 
 ```
-agent-trust/
+fraud-filter/
 ├── SKILL.md              # Agent-facing instructions (what the LLM reads)
 ├── README.md             # This file
 ├── TECHNICAL.md          # Architecture, security model, score formula

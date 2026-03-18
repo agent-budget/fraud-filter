@@ -23,7 +23,7 @@ import {
 } from "./reporter.js";
 import { syncHotlist } from "./hotlist-sync.js";
 
-const PORT = parseInt(process.env.AGENT_TRUST_PORT || "18921", 10);
+const PORT = parseInt(process.env.FRAUD_FILTER_PORT || "18921", 10);
 const HOST = "127.0.0.1";
 
 // Proxy detection — track if we've seen a request with forwarding headers,
@@ -35,7 +35,7 @@ function checkForProxy(req) {
   if (req.headers["x-forwarded-for"] || req.headers["x-real-ip"]) {
     proxyDetected = true;
     console.warn(
-      "[agent-trust] WARNING: Proxy headers detected on incoming request. " +
+      "[fraud-filter] WARNING: Proxy headers detected on incoming request. " +
       "The dashboard may be exposed beyond localhost. " +
       "Ensure nginx or any reverse proxy is NOT forwarding external traffic to this port."
     );
@@ -295,7 +295,7 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`agent-trust dashboard running at http://${HOST}:${PORT}`);
+  console.log(`fraud-filter dashboard running at http://${HOST}:${PORT}`);
 });
 
 // Sync hotlist on startup, then refresh every hour

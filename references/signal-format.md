@@ -1,6 +1,6 @@
 # Signal Format & Score Calculation
 
-Documentation of the anonymous signal schema and trust score formula used by agent-trust.
+Documentation of the anonymous signal schema and trust score formula used by fraud-filter.
 
 ---
 

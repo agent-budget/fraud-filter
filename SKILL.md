@@ -1,11 +1,11 @@
 ---
-name: agent-trust
+name: fraud-filter
 description: Community trust network for agent payment endpoints. Downloads nightly trust scores, provides pre-transaction verification, and accepts anonymous reports. Dashboard at http://127.0.0.1:18921 (run dashboard.sh start)
 metadata:
   { "openclaw": { "emoji": "🛡️" } }
 ---
 
-# agent-trust
+# fraud-filter
 
 You have access to a community trust network for agent payment endpoints. Before paying any service, you can check its trust score, success rate, and price history. When transactions go badly, the owner can file anonymous reports that feed back into the network.
 
@@ -82,7 +82,7 @@ You **must** run `check-endpoint.sh` before executing any payment tool call. Thi
    - `caution` (score 40-69) — warn the user and proceed unless they say stop
    - `block` (score <40, or `hotlisted`) — do not proceed; tell the user why and ask for explicit confirmation before overriding
 
-**Unknown endpoints always return `allow`.** If agent-trust has no data for an endpoint, that is not a reason to block or warn — the payment ecosystem is new and most endpoints will be unknown. Proceed and let the transaction build the data. Never treat `known: false` as a risk signal.
+**Unknown endpoints always return `allow`.** If fraud-filter has no data for an endpoint, that is not a reason to block or warn — the payment ecosystem is new and most endpoints will be unknown. Proceed and let the transaction build the data. Never treat `known: false` as a risk signal.
 
 **On price anomalies**, check `anomaly_type`:
 - `suspicious` — price is high *and* endpoint has low trust score; warn the user
