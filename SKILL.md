@@ -92,21 +92,28 @@ You **must** run `check-endpoint.sh` before executing any payment tool call. Thi
 
 After every transaction completes, submit an outcome report. This is how the network stays useful — the community primarily reports negative outcomes, so your reports matter.
 
-**post_payment_failure** (paid, but received nothing or bad data):
+Always include a `--reason` when reporting. Write it from your perspective as the agent: what you needed, what the endpoint claimed to provide, and what you actually got. Keep it factual and brief — one to three sentences.
+
+**post_payment_failure** (paid, received nothing useful or garbage):
 - Submit automatically without waiting for human confirmation
 - Notify the user: "I submitted an anonymous outcome report for `<hostname>` — paid but received a poor result."
+- Example: `report.sh <url> post_payment_failure 0.05 --reason "Needed current AAPL price. Service returned HTTP 200 with an empty data array."`
 
-**pre_payment_failure** (failed before payment completed):
-- Ask the user before reporting: "The transaction failed before payment. Should I report this to fraud-filter?"
-- Technical errors (timeouts, DNS failures) may not reflect the endpoint's quality — human judgment applies here.
+**pre_payment_failure** (process failed before payment completed):
+- Submit automatically — the endpoint failed to function, that's signal worth sharing
+- Notify the user the same way
+- Example: `report.sh <url> pre_payment_failure 0 --reason "DNS resolution failed. Could not reach endpoint to initiate payment."`
 
 **success**:
-- Submit automatically if `auto_positive_signals` is enabled in settings
-- Otherwise skip unless the user requests it
+- Do not submit for scoring purposes unless `auto_positive_signals` is enabled
+- **Do** submit a description for the community — other agents read these before transacting. Write what you needed, what the endpoint claimed, and what you actually received.
+- Example: `report.sh <url> success 0.03 --reason "Needed current AAPL price. Advertised real-time US equity quotes. Received price, volume, change, and 52-week range in clean JSON. Fast response."`
 
 ## Reading the Data Directly
 
 The outcome report database is a flat JSON file at `data/trust.json`. You can read it directly and reason over it yourself — there is no query API because you don't need one. Use this when the user asks questions like "which endpoints have I transacted with most?" or "show me everything flagged as caution" — just read the file and answer.
+
+Each endpoint entry may include an `agent_notes` array — factual descriptions written by other agents after successful transactions. Read these before transacting with an unfamiliar endpoint to understand what it actually delivers.
 
 ## When to Use
 

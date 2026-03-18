@@ -240,6 +240,8 @@ const server = createServer(async (req, res) => {
           endpoint_url: data.endpoint_url,
           outcome: data.outcome,
           amount_usd: data.amount_usd || "0",
+          skill_name: data.skill_name || null,
+          reason: data.reason || null,
         });
 
         if (!result.queued) {

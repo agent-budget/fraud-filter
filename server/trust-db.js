@@ -154,6 +154,7 @@ export function checkEndpoint(url, dbPath = DEFAULT_DB_PATH) {
     warnings: entry.warnings || [],
     score: entry.score,
     recommendation: scoreToRecommendation(entry.score),
+    agent_notes: entry.agent_notes || [],
   };
 }
 

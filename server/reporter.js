@@ -30,6 +30,7 @@ export function buildSignal(report, configPath) {
     timestamp_bucket: today,
     reporter_hash: reporterHash,
     skill_name: report.skill_name || null,
+    reason: report.reason || null,
   };
 }
 
@@ -65,6 +66,7 @@ export function queueReport(report, pendingPath = DEFAULT_PENDING_PATH, configPa
     status: "pending",
     endpoint_hint: extractHint(report.endpoint_url),
     skill_name: report.skill_name || null,
+    reason: report.reason || null,
   };
 
   appendFileSync(pendingPath, JSON.stringify(entry) + "\n", { mode: 0o600 });
@@ -129,6 +131,7 @@ export async function submitPendingReports(pendingPath = DEFAULT_PENDING_PATH, c
         reporter_hash:   report.reporter_hash,
       };
       if (report.skill_name) body.skill_name = report.skill_name;
+      if (report.reason) body.reason = report.reason;
 
       const response = await fetch(config.report_endpoint, {
         method: "POST",
