@@ -14,7 +14,7 @@ The dashboard server binds to `127.0.0.1`, never `0.0.0.0`. Security through net
 
 An endpoint with no data in the trust DB gets `recommendation: "allow"`. The payment ecosystem is new; most endpoints will be unknown for a long time. Treating unknown as `caution` would make the skill actively hostile to agent spending and would get it removed. Absence of reports is not evidence of bad behavior — it just means nobody has reported yet.
 
-The hotlist (see below) handles the real-time threat: a brand-new scam endpoint will appear there within hours of the first wave of failure reports, before it ever accumulates enough history for a trust score.
+The hotlist (see below) handles the real-time threat: a brand-new scam endpoint will appear there within hours of the first wave of failure reports, before it ever accumulates enough history for a satisfaction score.
 
 ### Hotlist for fast blocking
 
@@ -24,7 +24,7 @@ The hotlist is intentionally aggressive — it's a tripwire for sudden surges, n
 
 ### Nightly sync, not real-time
 
-Trust scores update daily, not per-transaction. This is intentional:
+Satisfaction scores update daily, not per-transaction. This is intentional:
 
 1. **Privacy**: Prevents the server from learning transaction patterns ("agent X checked endpoint Y at 3:47pm")
 2. **Simplicity**: A static JSON file on CDN is simpler than a real-time query API
@@ -38,13 +38,18 @@ Endpoint URLs are SHA-256 hashed in the trust database and signals. The `url_hin
 
 Exact transaction amounts are bucketed into ranges before reporting. A $0.05 transaction becomes `0.01-0.10`. This preserves enough signal for price anomaly detection without revealing exact spending.
 
-### Human-confirmed negatives
+### Reporting policy by outcome type
 
-Positive signals can be automatic. Negative signals always require human confirmation. This prevents agent bugs, network timeouts, or configuration errors from generating false complaints against good services.
+The community primarily reports negative outcomes — that's where the signal is. Positive outcome reports are opt-in (`auto_positive_signals`). For negative outcomes:
+
+- **post_payment_failure**: Auto-submitted without human confirmation. Paid and received nothing or bad data is unambiguous. Existing defenses (deduplication, 3-reporter hotlist threshold, rate limiting) provide sufficient protection against false reports from buggy agents.
+- **pre_payment_failure**: Requires human confirmation. Technical errors (timeouts, DNS failures, misconfigured agents) are indistinguishable from genuine endpoint failures at this stage.
+
+The agent always notifies the user when auto-submitting a report.
 
 ## Data Model
 
-### Trust Database (`trust.json`)
+### Outcome Report Database (`trust.json`)
 
 Flat JSON keyed by SHA-256 hash of normalized endpoint URL. See `references/signal-format.md` for full schema.
 
@@ -54,7 +59,7 @@ Key properties per endpoint:
 - `first_seen`, `last_success`, `last_failure`: Timeline
 - `failure_types`: Breakdown by `post_payment` vs `pre_payment`
 - `warnings`: Derived flags (high_failure_rate, volatile_pricing, etc.)
-- `score`: Composite trust score 0-100
+- `score`: Composite satisfaction score 0-100
 
 ### Pending Reports (`pending-reports.jsonl`)
 
@@ -76,7 +81,7 @@ Generated on first run with a random `install_id` (used only for reporter hash d
 
 ## Score Calculation
 
-Trust score (0-100) is computed from five weighted factors:
+Satisfaction score (0-100) is computed from five weighted factors. Higher means more positive transaction outcomes reported by the community:
 
 | Factor | Range | Description |
 |---|---|---|
@@ -97,7 +102,7 @@ Full formula documented in `references/signal-format.md`.
 | 40-69 | `caution` |
 | 0-39 | `block` |
 | hotlisted | `block` (overrides score) |
-| unknown | `allow` (no data is not a risk signal) |
+| unknown | `allow` (no outcome reports is not a risk signal) |
 
 ## Price Anomaly Types
 

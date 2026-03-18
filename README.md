@@ -1,6 +1,6 @@
 # fraud-filter
 
-Community trust network for agent payment endpoints. Downloads nightly trust scores, provides pre-transaction verification, and accepts anonymous outcome reports.
+Community transaction outcome report network for agent payment endpoints. Downloads nightly satisfaction scores, provides pre-transaction verification, and submits anonymous outcome reports.
 
 ## Security & Privacy
 
@@ -28,7 +28,7 @@ git clone https://github.com/agent-budget/fraud-filter.git ~/.openclaw/skills/fr
 ## Use
 
 Ask your agent:
-- "Is this endpoint trustworthy?" (before paying any service)
+- "Check this endpoint before I pay" (before paying any service)
 - "Report that last transaction as a failure"
 - "Show me the trust dashboard"
 
