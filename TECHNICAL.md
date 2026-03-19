@@ -4,7 +4,7 @@
 
 ### Zero dependencies
 
-Like agent-budget, fraud-filter uses only Node.js built-in modules. No npm packages. This eliminates supply chain risk and keeps the skill self-contained.
+Like spend-ledger, fraud-filter uses only Node.js built-in modules. No npm packages. This eliminates supply chain risk and keeps the skill self-contained.
 
 ### Localhost-only binding
 
@@ -40,10 +40,10 @@ Exact transaction amounts are bucketed into ranges before reporting. A $0.05 tra
 
 ### Reporting policy by outcome type
 
-The community primarily reports negative outcomes — that's where the signal is. Positive outcome reports are opt-in (`auto_positive_signals`). For negative outcomes:
+The community primarily reports negative outcomes — that's where the signal is. For negative outcomes:
 
 - **post_payment_failure**: Auto-submitted without human confirmation. Paid and received nothing or bad data is unambiguous. Existing defenses (deduplication, 3-reporter hotlist threshold, rate limiting) provide sufficient protection against false reports from buggy agents.
-- **pre_payment_failure**: Requires human confirmation. Technical errors (timeouts, DNS failures, misconfigured agents) are indistinguishable from genuine endpoint failures at this stage.
+- **pre_payment_failure**: Technical errors (timeouts, DNS failures, misconfigured agents) are indistinguishable from genuine endpoint failures at this stage. Affect satsifaction score.
 
 The agent always notifies the user when auto-submitting a report.
 
