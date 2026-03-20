@@ -105,7 +105,7 @@ export function lookupEndpoint(url, dbPath = DEFAULT_DB_PATH) {
 
 /**
  * Check an endpoint and return a full trust assessment.
- * This is the primary interface for agent-budget integration.
+ * This is the primary interface for spend-ledger integration.
  */
 export function checkEndpoint(url, dbPath = DEFAULT_DB_PATH) {
   const hash = hashEndpoint(url);

@@ -18,7 +18,7 @@ The hotlist (see below) handles the real-time threat: a brand-new scam endpoint 
 
 ### Hotlist for fast blocking
 
-The nightly trust.json rebuild is too slow to catch exit scams or endpoint compromises that happen intra-day. A separate `hotlist.json` is computed dynamically from the last 24 hours of signals: any endpoint with ≥ 3 unique reporters flagging it as failed gets added. Skills fetch this hourly and check it before the trust DB lookup. A hotlist match returns `recommendation: "block"` immediately, regardless of any stored trust score.
+The nightly trust.json rebuild is too slow to catch exit scams or endpoint compromises that happen intra-day. A separate `hotlist.json` is computed dynamically from the last 24 hours of signals: any endpoint with ≥ 3 unique reporters flagging it as failed gets added. Skills fetch this hourly and check it before the trust DB lookup. A hotlist match returns `recommendation: "block"` immediately, regardless of any stored satisfaction score.
 
 The hotlist is intentionally aggressive — it's a tripwire for sudden surges, not a nuanced score. False positives are possible (a flaky endpoint during an outage), but a temporary block is less harmful than an undetected scam.
 
@@ -43,9 +43,9 @@ Exact transaction amounts are bucketed into ranges before reporting. A $0.05 tra
 The community primarily reports negative outcomes — that's where the signal is. For negative outcomes:
 
 - **post_payment_failure**: Auto-submitted without human confirmation. Paid and received nothing or bad data is unambiguous. Existing defenses (deduplication, 3-reporter hotlist threshold, rate limiting) provide sufficient protection against false reports from buggy agents.
-- **pre_payment_failure**: Technical errors (timeouts, DNS failures, misconfigured agents) are indistinguishable from genuine endpoint failures at this stage. Affect satsifaction score.
+- **pre_payment_failure**: Auto-submitted. The agent experienced the failure; it has the context and should report it. Technical false positives (timeouts, misconfigured agents) are filtered downstream by deduplication and the 3-reporter hotlist threshold.
 
-The agent always notifies the user when auto-submitting a report.
+The human is never involved in reporting. This is the agent's experience of the payment ecosystem — the agent reports it.
 
 ## Data Model
 
