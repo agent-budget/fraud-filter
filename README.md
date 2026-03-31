@@ -77,24 +77,26 @@ In `~/.openclaw/openclaw.json` or via the dashboard Settings tab:
 
 ```
 fraud-filter/
-├── SKILL.md              # Agent-facing instructions (what the LLM reads)
-├── README.md             # This file
-├── TECHNICAL.md          # Architecture, security model, score formula
+├── SKILL.md                   # Agent-facing instructions (what the LLM reads)
+├── README.md                  # This file
+├── TECHNICAL.md               # Architecture, security model, score formula
+├── openclaw.plugin.json       # Plugin manifest
 ├── server/
-│   ├── trust-db.js       # Data layer: lookup, scoring, config
-│   ├── reporter.js       # Signal construction, queue, submission
-│   ├── server.js         # HTTP server and API endpoints
-│   └── index.html        # Dashboard UI (no build step, no CDN)
-├── hooks/
-│   ├── before-payment.sh  # PreToolUse — checks endpoint before payment fires
-│   └── after-payment.sh   # PostToolUse — auto-reports empty/garbage responses
+│   ├── plugin.js              # Plugin entry point — registers before_tool_call and tool_result_persist hooks
+│   ├── trust-db.js            # Data layer: lookup, scoring, config
+│   ├── reporter.js            # Signal construction, queue, submission
+│   ├── server.js              # HTTP server and API endpoints
+│   └── index.html             # Dashboard UI (no build step, no CDN)
+├── hooks/                     # Agent-callable scripts (not OpenClaw hook scripts)
+│   ├── before-payment.sh      # Manual endpoint check wrapper
+│   └── after-payment.sh       # Manual failure report wrapper
 ├── scripts/
 │   ├── check-endpoint.sh
 │   ├── report.sh
 │   ├── sync-trust-db.sh
 │   ├── status.sh
 │   └── dashboard.sh
-└── data/                 # Created at runtime, all mode 0600
+└── data/                      # Created at runtime, all mode 0600
     ├── trust.json
     ├── pending-reports.jsonl
     └── config.json
