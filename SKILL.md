@@ -2,6 +2,8 @@
 name: fraud-filter
 description: Community trust scores for AI agent payment endpoints — checks endpoint reputation before payment and auto-reports failures to the network.
 version: 0.3.0
+description: Community trust scores for AI agent payment endpoints — checks endpoint reputation before payment and queues anonymous failure reports locally (network reporting is opt-in).
+version: 0.4.0
 metadata:
   openclaw:
     emoji: "🛡️"
@@ -124,6 +126,7 @@ check-endpoint.sh https://api.example.com/data --price 2.50  # include price ano
 ## Post-Transaction Reporting
 
 The plugin automatically detects and queues failure reports for empty, garbage, or error responses — you do not need to report these manually.
+The plugin automatically detects failure outcomes and queues an anonymous report to `data/pending-reports.jsonl` on your local machine — no network call is made. Reports are only submitted to the network when you explicitly enable `participate_in_network` and trigger a flush. You do not need to run `report.sh` for failures the plugin can detect (empty, garbage, or error tool responses).
 
 Use `report.sh` manually when the plugin couldn't have known it was a failure: the service returned something that looked valid at the protocol level but was actually wrong or useless from your perspective as the agent. This is a quality judgment only you can make.
 
@@ -141,6 +144,19 @@ report.sh <url> pre_payment_failure 0 --reason "DNS resolution failed. Could not
 - Submit without waiting for human confirmation
 - Notify the user: "I submitted an anonymous outcome report for `<hostname>` — paid but received a poor result."
 
+
+**When to queue manually:**
+- Service returned HTTP 200 with plausible-looking data that turned out to be wrong, stale, or fabricated
+- Service returned less than you paid for with no error (partial fulfillment)
+
+```bash
+report.sh <url> post_payment_failure 0.05 --reason "Needed current AAPL price. Service returned HTTP 200 with an empty data array."
+report.sh <url> pre_payment_failure 0 --reason "DNS resolution failed. Could not reach endpoint to initiate payment."
+```
+
+- Queue locally without waiting for human confirmation
+- Notify the user: "I queued an anonymous outcome report for `<hostname>` — paid but received a poor result. It will be sent to the network only if you enable `participate_in_network`."
+
 **Never report success.** Absence of failure reports is the positive signal.
 
 ## Reading the Data Directly
@@ -157,7 +173,7 @@ The outcome report database is a flat JSON file at `data/trust.json`. You can re
 
 ## Important
 
-- **Auto-report all failures.** The community needs this signal; waiting for human confirmation means it never gets submitted in unattended runs.
-- **Always notify the user when auto-reporting.** One line is enough: what endpoint, what outcome, that it was anonymous.
+- **Queue all failure reports locally.** The plugin does this automatically for detectable failures; run `report.sh` for quality-judgment failures only you can identify.
+- **Always notify the user when queuing.** One line: what endpoint, what outcome, and that the report stays local until they enable `participate_in_network`.
 - **Never report success.** Absence of failure reports is the positive signal.
 - **Never block on unknown endpoints.** False blocks on legitimate services make this skill useless.

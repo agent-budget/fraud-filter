@@ -56,35 +56,26 @@ fi
 
 echo "Downloading trust database from: $CDN_URL"
 
-# Download with curl, fall back to wget
+# Download using Node's built-in fetch (Node 18+, already required by this skill).
+# No curl or wget dependency.
 TEMP_PATH="$DB_PATH.tmp"
-if command -v curl &>/dev/null; then
-  HTTP_CODE=$(curl -sS -w "%{http_code}" -o "$TEMP_PATH" "$CDN_URL" 2>/dev/null || echo "000")
-elif command -v wget &>/dev/null; then
-  wget -q -O "$TEMP_PATH" "$CDN_URL" 2>/dev/null && HTTP_CODE="200" || HTTP_CODE="000"
-else
-  echo "Error: neither curl nor wget found" >&2
-  exit 1
-fi
-
-if [ "$HTTP_CODE" = "200" ] && [ -f "$TEMP_PATH" ] && [ -s "$TEMP_PATH" ]; then
-  # Validate JSON
-  if node --input-type=module -e "
-    import { readFileSync } from 'node:fs';
-    const d = JSON.parse(readFileSync('${TEMP_PATH}', 'utf-8'));
-    if (!d.endpoints) throw new Error('missing endpoints field');
-    console.log('Valid: ' + Object.keys(d.endpoints).length + ' endpoints');
-  " 2>/dev/null; then
-    mv "$TEMP_PATH" "$DB_PATH"
-    chmod 600 "$DB_PATH"
-    echo "Trust database updated successfully."
-  else
-    rm -f "$TEMP_PATH"
-    echo "Error: downloaded file is not valid trust.json" >&2
-    exit 1
-  fi
+if node --input-type=module -e "
+  import { writeFileSync } from 'node:fs';
+  const res = await fetch('${CDN_URL}', {
+    headers: { 'User-Agent': 'fraud-filter-skill/1.0' },
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  if (!data.endpoints) throw new Error('missing endpoints field');
+  writeFileSync('${TEMP_PATH}', JSON.stringify(data));
+  console.log('Valid: ' + Object.keys(data.endpoints).length + ' endpoints');
+" 2>&1; then
+  mv "$TEMP_PATH" "$DB_PATH"
+  chmod 600 "$DB_PATH"
+  echo "Trust database updated successfully."
 else
   rm -f "$TEMP_PATH"
-  echo "Error: download failed (HTTP $HTTP_CODE)" >&2
+  echo "Error: download or validation failed" >&2
   exit 1
 fi

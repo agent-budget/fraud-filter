@@ -339,7 +339,8 @@ const DEFAULT_CONFIG = {
   trust_db_url: "https://api.fraud-filter.com/trust.json",
   report_endpoint: "https://api.fraud-filter.com/reports",
   sync_interval_hours: 24,
-  participate_in_network: false,
+  participate_in_network: false,  // true to enable network report submission
+  sync_hotlist: true,             // false to disable hourly hotlist download (e.g. air-gapped)
   on_block: "block",    // "block" | "warn" — action when recommendation is block
   on_caution: "warn",   // "warn" | "block" | "allow" — action when recommendation is caution
   install_id: null,

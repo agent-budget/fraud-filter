@@ -67,9 +67,9 @@ function json(res, data, status = 200) {
   res.writeHead(status, {
     "Content-Type": "application/json",
     "Content-Length": Buffer.byteLength(body),
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    // No CORS headers — this server binds to 127.0.0.1 only and has no
+    // legitimate cross-origin callers. A wildcard would let any webpage read
+    // trust data from a running dashboard via cross-origin fetch.
   });
   res.end(body);
 }
@@ -91,16 +91,7 @@ function notFound(res) {
 const server = createServer(async (req, res) => {
   checkForProxy(req);
 
-  // CORS preflight
-  if (req.method === "OPTIONS") {
-    res.writeHead(204, {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    });
-    res.end();
-    return;
-  }
+
 
   const { pathname, params } = parseQuery(req.url);
 

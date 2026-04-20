@@ -58,8 +58,12 @@ export function register(api) {
 
   // Sync hotlist on load, then refresh every hour.
   // Runs in the background — never blocks registration.
-  syncHotlist();
-  setInterval(syncHotlist, 60 * 60 * 1000);
+  // Download-only (no user data sent). Disable with sync_hotlist: false in config.
+  const cfg = loadConfig();
+  if (cfg.sync_hotlist !== false) {
+    syncHotlist();
+    setInterval(syncHotlist, 60 * 60 * 1000);
+  }
 
   // ── Enforcement ─────────────────────────────────────────────────────────────
   // Fires before the tool executes. Checks endpoint trust; blocks or warns.

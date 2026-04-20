@@ -22,6 +22,8 @@ The nightly trust.json rebuild is too slow to catch exit scams or endpoint compr
 
 The hotlist is intentionally aggressive — it's a tripwire for sudden surges, not a nuanced score. False positives are possible (a flaky endpoint during an outage), but a temporary block is less harmful than an undetected scam.
 
+The hotlist is fetched on plugin startup and refreshed hourly. This is a **download only** — no user data is sent. The request carries only a `User-Agent: fraud-filter-skill/1.0` header; the response is the same public file served to every client. To disable automatic hotlist syncing (e.g., in an air-gapped or fully offline environment), set `sync_hotlist: false` in `data/config.json`. Endpoint hash lookups will continue to work against the last cached `data/hotlist.json`.
+
 ### Nightly sync, not real-time
 
 Satisfaction scores update daily, not per-transaction. This is intentional:
@@ -38,14 +40,24 @@ Endpoint URLs are SHA-256 hashed in the trust database and signals. The `url_hin
 
 Exact transaction amounts are bucketed into ranges before reporting. A $0.05 transaction becomes `0.01-0.10`. This preserves enough signal for price anomaly detection without revealing exact spending.
 
+### Two-phase reporting: queue vs. submit
+
+All reporting follows a strict two-phase model. The two phases are independent and controlled by separate mechanisms.
+
+**Phase 1 — Queue (always local, no network)**
+When the plugin detects a payment failure via `tool_result_persist`, it calls `queueReport()`, which appends an anonymous signal to `data/pending-reports.jsonl` (mode `0600`). No network connection is made in this phase. The file never leaves the machine. The agent notifies the user that a report was queued.
+
+**Phase 2 — Submit (opt-in network, triggered explicitly)**
+`submitPendingReports()` checks `participate_in_network` at the top of the function before doing anything else. With the default `participate_in_network: false`, it returns immediately with `{ reason: "network_participation_disabled" }` — no data leaves the machine. With `participate_in_network: true`, a flush is triggered by the user (or the agent at the user's direction) via `POST /api/reports/flush` or `report.sh --flush`. There is no automatic submission timer.
+
 ### Reporting policy by outcome type
 
-The community primarily reports negative outcomes — that's where the signal is. For negative outcomes:
+For negative outcomes, the plugin always queues a local signal automatically:
 
-- **post_payment_failure**: Auto-submitted without human confirmation. Paid and received nothing or bad data is unambiguous. Existing defenses (deduplication, 3-reporter hotlist threshold, rate limiting) provide sufficient protection against false reports from buggy agents.
-- **pre_payment_failure**: Auto-submitted. The agent experienced the failure; it has the context and should report it. Technical false positives (timeouts, misconfigured agents) are filtered downstream by deduplication and the 3-reporter hotlist threshold.
+- **post_payment_failure**: Queued locally without confirmation — paid and received nothing is unambiguous. Submission to the network requires explicit opt-in.
+- **pre_payment_failure**: Queued locally. Technical false positives (timeouts, misconfigured agents) are filtered downstream by deduplication and the 3-reporter hotlist threshold.
 
-The human is never involved in reporting. This is the agent's experience of the payment ecosystem — the agent reports it.
+With `participate_in_network: false` (the default), failure reports accumulate in `data/pending-reports.jsonl` for local review and are never sent anywhere. The user decides when and whether to submit.
 
 ## Data Model
 

@@ -11,6 +11,14 @@ Community transaction outcome report network for agent payment endpoints. Downlo
 - No wallet addresses, transaction details, or user identity is ever transmitted
 - Reporting is opt-in; by default the skill only downloads, never sends
 
+## How reporting works (two phases)
+
+**Phase 1 — Queue (always local, no network):** When the plugin detects a payment failure, it writes an anonymous signal to `data/pending-reports.jsonl` (mode `0600`). Nothing is sent anywhere. The report file stays on your machine.
+
+**Phase 2 — Submit (opt-in, triggered explicitly):** Submission to `api.fraud-filter.com` only happens when you set `participate_in_network: true` *and* explicitly trigger a flush via `POST /api/reports/flush`, `report.sh --flush`, or the dashboard. There is no automatic submission timer. With the default `participate_in_network: false`, reports accumulate locally and are never sent.
+
+**What the skill downloads automatically:** The hotlist (`api.fraud-filter.com/hotlist.json`) is fetched on startup and refreshed hourly. This is download-only — no user data is sent. Set `sync_hotlist: false` in `data/config.json` to disable this if you need a fully offline environment.
+
 See [TECHNICAL.md](TECHNICAL.md) for the full security model, data model, and score formula.
 
 ## Install
@@ -59,6 +67,7 @@ In `~/.openclaw/openclaw.json` or via the dashboard Settings tab:
         "report_endpoint": "https://api.fraud-filter.com/reports",
         "sync_interval_hours": 24,
         "participate_in_network": false,
+        "sync_hotlist": true,
         "on_block":   "block",
         "on_caution": "warn"
       }
@@ -66,6 +75,13 @@ In `~/.openclaw/openclaw.json` or via the dashboard Settings tab:
   }
 }
 ```
+
+| Key | Default | Description |
+|---|---|---|
+| `participate_in_network` | `false` | Enable network submission of queued failure reports |
+| `sync_hotlist` | `true` | Download the hourly hotlist from `api.fraud-filter.com`; set `false` for offline/air-gapped use |
+| `on_block` | `"block"` | Action when recommendation is `block`: `"block"` or `"warn"` |
+| `on_caution` | `"warn"` | Action when recommendation is `caution`: `"warn"`, `"block"`, or `"allow"` |
 
 ## Requirements
 
